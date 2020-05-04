@@ -254,6 +254,14 @@ func (log *Logger) clone() *Logger {
 }
 
 func (log *Logger) check(lvl zapcore.Level, msg string) *zapcore.CheckedEntry {
+	zcl, zclok := log.core.LevelEnabler.(zapcore.Level); 
+	if zclok && !zcl.Enabled(lvl) && lvl < zapcore.DPanicLevel {
+		return nil
+	}
+	return log.checkSlow(lvl, msg)
+}
+
+func (log *Logger) checkSlow(lvl zapcore.Level, msg string) *zapcore.CheckedEntry {
 	// check must always be called directly by a method in the Logger interface
 	// (e.g., Check, Info, Fatal).
 	const callerSkipOffset = 2
